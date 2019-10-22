@@ -1,10 +1,8 @@
 # To add a new cell, type '#%%'
 # To add a new markdown cell, type '#%% [markdown]'
-#%%
 from IPython import get_ipython
 
 
-#%%
 import pandas as pd 
 import numpy as np
 import matplotlib
@@ -19,15 +17,13 @@ from sklearn.metrics import roc_auc_score
 from sklearn.ensemble import RandomForestClassifier
 
 
-#%%
+
 df = pd.read_csv('sample_data_intw.csv')
 
 
-#%%
 df.head()
 
-
-#%%
+#########################################drop the unwanted variables ###############
 df.set_index(df['pdate'],inplace = True)
 
 df = df.sort_index()
@@ -35,36 +31,32 @@ df = df.sort_index()
 temp = df.drop(df[['pcircle','pdate']],axis = 1)
 
 
-#%%
+
 temp.info()
 
 
-#%%
+############################################checking the null #########################
 #checking wheather is any null values 
 temp.isna().sum()
 
-
-#%%
+########################################### correlation of data ########################
 plt.rcParams['figure.figsize'] = (20, 12)
 plt.rcParams['font.size'] = 10
 
 sns.heatmap(temp.corr())
 
 
-#%%
 temp.iloc[:,3:].head(10)
 
 
-#%%
+
 temp.describe()
 
-
-#%%
 from sklearn.preprocessing import StandardScaler,MinMaxScaler
 from scipy.stats import shapiro
 
 
-#%%
+#############################################################################################
 # days30_user = temp[['daily_decr30','rental30','sumamnt_ma_rech30','cnt_loans30','payback30','maxamnt_loans30']]
 
 
@@ -72,16 +64,14 @@ from scipy.stats import shapiro
 # data_30_medianamtrech = (df['medianamnt_ma_rech30'].loc[(df['pdate'] <= '2016-06-30')])**(1/2)
 
 
-#%%
+##################################################### Data normalization ##################
 min_max_scaler = MinMaxScaler()
 np_scaled = min_max_scaler.fit_transform(temp.iloc[:,3:])
 
 
-#%%
 temp_normalized = pd.DataFrame(np_scaled, columns = temp.iloc[:,3:].columns)
 
 
-#%%
 stat, p = shapiro(temp_normalized['sumamnt_ma_rech30'][:150])
 print('Statistics=%.3f, p=%.3f' % (stat, p))
 # interpret
@@ -91,14 +81,12 @@ if p > alpha:
 else:
     print('Sample does not look Gaussian (reject H0)')
 
-#%% [markdown]
-# > ## Feature extraction using PCA
+###### Feature extraction using PCA##############################
 
-#%%
 from sklearn.decomposition import PCA
 
 
-#%%
+####################################################
 x,y = temp_normalized.iloc[:,3:],temp.iloc[:,0]
 
 
@@ -118,13 +106,13 @@ X_test = pca.transform(x_test)
 #%% [markdown]
 # > ## Applying the ML Model on x_train 
 
-#%%
+############################ Loading the model ####################################
 from sklearn.ensemble import RandomForestClassifier
 
 rf_classifier = RandomForestClassifier(max_depth=85, oob_score = True,random_state=2356)
 rf_model = rf_classifier.fit(X_train, y_train)
 
-#%%
+############################### Predict the variables #############################
 y_pred = rf_model.predict(X_test)
 
 
@@ -145,7 +133,7 @@ def model_accuracy(y_test,y_pred):
 #%%
 param_test1 = {'n_estimators': range(50, 150, 20)}
 
-#best_params is a dict you can pass directly to train a model with optimal settings 
+############best_params is a dict you can pass directly to train a model with optimal settings #####
 def best_para_2model():
     currtime = time()
     
@@ -159,14 +147,14 @@ def best_para_2model():
     best_model = RandomForestClassifier(param_test1,oob_score = True,random_state=2356)
     return best_model
 
-#%%
+#################################### Save the result #############################################
 result_list = []
 def log_result(result):
     # This is called whenever foo_pool(i) returns a result.
     # result_list is modified only by the main process, not the pool workers.
     result_list.append(result)
 
-
+####################################### save the model file #######################################
 def save_model(trained_model, model_file_path ):
     """
     :type trained_model: object
@@ -176,8 +164,7 @@ def save_model(trained_model, model_file_path ):
     model = joblib.dump(trained_model, model_file_path)
     return (model_file_path)
 
-
-#%%
+######################################## Multiprocessing the works ###################################
 
 if __name__ == "__main__":
     pool = Pool(processes=4)
